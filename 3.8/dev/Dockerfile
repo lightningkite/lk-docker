@@ -5,21 +5,21 @@ ARG PGID=${PGID:-1000}
 ENV APP_DIR="/code"
 ENV HOME="/home/python"
 ENV PYTHON_ENV="/venv"
-ENV PATH="${HOME}/.poetry/bin:${APP_DIR}/.venv/bin:${APP_DIR}:${PATH}"
+ENV PATH="${HOME}/.poetry/bin:${PYTHON_ENV}/bin:${APP_DIR}:${PATH}"
 ENV PYTHONUNBUFFERED 1
 
 # create user/group
 RUN set -ex \
   && addgroup --gid $PGID python \
-  && useradd -u $PUID -g $PGID python \
-  && mkdir -p $PYTHON_ENV $HOME $APP_DIR
+  && useradd --no-log-init -r -m -d $HOME -u $PUID -g $PGID python \
+  && mkdir -p $PYTHON_ENV $APP_DIR \
+  && chown -R python.python $PYTHON_ENV $APP_DIR
 
 # create and activate our virtual env
 RUN set -ex \
   && python3 -m venv $PYTHON_ENV \
-  && echo source $PYTHON_ENV/bin/activate > $HOME/.bashrc \
-  && chown -R python.python $PYTHON_ENV $HOME $APP_DIR
-
+  && echo source $PYTHON_ENV/bin/activate > $HOME/.bashrc
+  
 # install dev dependencys
 RUN set -ex \
   && apt-get update && apt-get install -y --no-install-recommends \
